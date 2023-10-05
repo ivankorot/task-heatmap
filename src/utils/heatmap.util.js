@@ -55,3 +55,34 @@ export const transformDataForHeatmap = (data, bucketSize) => {
 
   return transformedData;
 };
+
+export const calculateColorRange = (dataset, colorOptions) => {
+  const maxY = dataset.reduce((i, j) =>
+    i > j.data.reduce((a, b) => (a.y > b.y ? a : b)).y
+      ? i
+      : j.data.reduce((a, b) => (a.y > b.y ? a : b)).y,
+  );
+
+  const minY = dataset.reduce((i, j) =>
+    i < j.data.reduce((a, b) => (a.y < b.y ? a : b)).y
+      ? i
+      : j.data.reduce((a, b) => (a.y < b.y ? a : b)).y,
+  );
+
+  const newStep = Math.ceil(maxY / colorOptions.length);
+
+  const updatedStructure = colorOptions.reduce((acc, item, index) => {
+    const newFrom = index === 0 ? minY : acc[acc.length - 1].to;
+    const newTo = index === 0 ? newStep : newFrom + newStep;
+    acc.push({
+      ...item,
+      from: newFrom,
+      to: newTo,
+    });
+    return acc;
+  }, []);
+
+  updatedStructure[updatedStructure.length - 1].to = maxY;
+
+  return updatedStructure;
+};
